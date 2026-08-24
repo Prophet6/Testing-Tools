@@ -27,4 +27,4 @@ Other
   rotate-host-key.bat     new fingerprint (Accept_New_Key test)
 
 Full walkthrough: README.md
-SSH Interface v2 (Crestron client module): https://github.com/Prophet6/ssh-interface-v2
+SSH Interface v2 (Crestron client module): https://github.com/Prophet6/Crestron-Modules/tree/main/ssh-interface-v2

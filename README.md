@@ -2,7 +2,7 @@
 
 PC-side bench tool for Crestron modules. It speaks **SSH** or **raw TCP**, always bidirectional: lines you type are sent; incoming bytes print as `[RX]`.
 
-Originally shipped inside [ssh-interface-v2](https://github.com/Prophet6/ssh-interface-v2). This repository is that `test-server` folder on its own.
+Originally shipped inside SSH Interface v2. This repository is that `test-server` folder on its own. The Crestron module is now at [Crestron-Modules/ssh-interface-v2](https://github.com/Prophet6/Crestron-Modules/tree/main/ssh-interface-v2).
 
 New to this folder? Read `START-HERE.txt`, then follow the steps below.
 
@@ -26,7 +26,7 @@ This project is not affiliated with Crestron Electronics.
 2. **Python 3.9 or newer** from [python.org](https://www.python.org/downloads/)
 3. Check **Add python.exe to PATH** on the installer
 4. Administrator access (once) for a Windows Firewall rule
-5. For SSH tests: [SSH Interface v2](https://github.com/Prophet6/ssh-interface-v2) on a **4-Series** processor
+5. For SSH tests: [SSH Interface v2](https://github.com/Prophet6/Crestron-Modules/tree/main/ssh-interface-v2) on a **4-Series** processor
 
 Typical bench:
 
