@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+host_key
+host_key.pub
+.DS_Store
+Thumbs.db
