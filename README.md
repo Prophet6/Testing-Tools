@@ -39,14 +39,7 @@ This project is not affiliated with Crestron Electronics.
 1. Windows 10 or 11 PC on the **same LAN** as the processor
 2. **Python 3.9+** from [python.org](https://www.python.org/downloads/) — check **Add python.exe to PATH**
 3. Double-click `install-dependencies.bat` (once; needed for SSH)
-4. Firewall: allow inbound **TCP 23** (TCP Client test) and **TCP 2222** (SSH Client test)
-
-```powershell
-New-NetFirewallRule -DisplayName "Testing-Tools TCP 23" `
-  -Direction Inbound -Protocol TCP -LocalPort 23 -Action Allow
-New-NetFirewallRule -DisplayName "Testing-Tools SSH 2222" `
-  -Direction Inbound -Protocol TCP -LocalPort 2222 -Action Allow
-```
+4. Firewall: **right-click `allow-firewall.bat` → Run as administrator** (once). That opens inbound TCP **23**, **2222**, and **5000**. Without this, the processor never reaches the mock — Windows Firewall is on by default and Python does not get an allow rule.
 
 New to this folder? Read `START-HERE.txt`.
 

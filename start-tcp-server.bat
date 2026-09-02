@@ -16,8 +16,9 @@ echo Point Address$ at THIS PC LAN IP (not 127.0.0.1). Port = 23.
 echo Hold Connect high. Type here to send. [RX] is data from the processor.
 echo Ctrl+C to stop.
 echo.
-echo If the processor cannot connect, allow inbound TCP 23 in Windows Firewall:
-echo   New-NetFirewallRule -DisplayName "TCP mock (23)" -Direction Inbound -Protocol TCP -LocalPort 23 -Action Allow
+echo Windows Firewall blocks inbound TCP 23 until you allow it.
+echo Right-click allow-firewall.bat and Run as administrator (once).
+echo Address$ must be this PC LAN IP, not 127.0.0.1.
 echo.
 
 python -u mock.py tcp-server --port 23

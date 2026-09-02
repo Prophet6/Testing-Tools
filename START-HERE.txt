@@ -6,7 +6,7 @@ Default repo for PC bench tools used with Crestron-Modules.
 Install (once)
   1. Python 3.9+ from python.org  — check "Add python.exe to PATH"
   2. Double-click install-dependencies.bat  (needed for SSH)
-  3. Allow inbound TCP 23 and 2222 in Windows Firewall
+  3. Right-click allow-firewall.bat → Run as administrator (once)
 
 TCP Client (Dynamic IP)  — processor connects to this PC
   1. Double-click start-tcp-server.bat
