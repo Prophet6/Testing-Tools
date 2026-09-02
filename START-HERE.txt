@@ -1,12 +1,21 @@
-SSH / TCP mock
-==============
+Testing-Tools
+=============
+
+Default repo for PC bench tools used with Crestron-Modules.
 
 Install (once)
   1. Python 3.9+ from python.org  — check "Add python.exe to PATH"
-  2. Double-click install-dependencies.bat
-  3. Allow inbound TCP 2222 in Windows Firewall (SSH server tests)
+  2. Double-click install-dependencies.bat  (needed for SSH)
+  3. Allow inbound TCP 23 and 2222 in Windows Firewall
 
-Crestron CLIENT test  (processor connects to this PC over SSH)
+TCP Client (Dynamic IP)  — processor connects to this PC
+  1. Double-click start-tcp-server.bat
+  2. Set Address$ = LAN IP printed by the server (not 127.0.0.1)
+     Port = 23
+  3. Hold Connect
+  4. Type here to send; [RX] is data from the processor
+
+SSH Client  — processor connects to this PC over SSH
   1. Double-click start-ssh-server.bat
   2. Set Client module:
        IP_Address$ = LAN IP printed by the server (not 127.0.0.1)
@@ -15,16 +24,18 @@ Crestron CLIENT test  (processor connects to this PC over SSH)
        Password$   = crestron
        Accept_Any_Key = Yes
   3. Hold Connect
-  4. Type here to send; [RX] is data from the processor
 
-Inbound TCP on the processor (built-in TCP/IP Server symbol)
+Inbound TCP on the processor (built-in TCP/IP Server)
   1. Enable TCP/IP Server in SIMPL, note its port (e.g. 5000)
   2. Double-click start-tcp-client.bat
   3. Enter processor IP and that port
-  4. Type here to send; [RX] is data from the processor
+
+TCP Server with Authentication
+  1. Double-click start-tcp-auth-client.bat
+  2. Enter processor IP, port (default 50001), optional TLS / AUTH
 
 Other
-  rotate-host-key.bat     new fingerprint (Accept_New_Key test)
+  rotate-host-key.bat     new SSH fingerprint (Accept_New_Key test)
 
 Full walkthrough: README.md
-SSH Interface v2 (Crestron client module): https://github.com/Prophet6/Crestron-Modules/tree/main/ssh-interface-v2
+Crestron modules: https://github.com/Prophet6/Crestron-Modules

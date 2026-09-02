@@ -1,8 +1,9 @@
 """
-Bidirectional mock for SSH Interface v2.
+PC bench tools for Crestron modules (Testing-Tools).
 
-  ssh-server  This PC listens (Crestron Client module connects here)
-  tcp-client  This PC dials out (SIMPL Windows TCP/IP Server listens)
+  ssh-server  This PC listens over SSH (Crestron SSH Client connects here)
+  tcp-server  This PC listens over raw TCP (Crestron TCP Client connects here)
+  tcp-client  This PC dials out (SIMPL Windows TCP/IP Server or TCP Server with Authentication)
 
 Type a line and press Enter to send. Incoming data prints as [RX].
 Ctrl+C stops.
@@ -331,6 +332,61 @@ def run_ssh_server(args):
     sock.close()
 
 
+def run_tcp_server(args):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind((args.bind, args.port))
+    sock.listen(4)
+    sock.settimeout(1.0)
+
+    print("TCP server listening on {0}:{1}".format(args.bind, args.port))
+    print("This PC LAN IP : {0}".format(local_ipv4()))
+    print("Crestron TCP Client (Dynamic IP): Address$={0}  Port={1}".format(local_ipv4(), args.port))
+    print("Hold Connect high. Type here to send; [RX] is data from the processor.")
+    start_stdin(args.eol)
+
+    while not STOP.is_set():
+        print("Waiting for TCP connection...")
+        client = None
+        addr = None
+        while not STOP.is_set():
+            try:
+                client, addr = sock.accept()
+                break
+            except socket.timeout:
+                continue
+            except KeyboardInterrupt:
+                STOP.set()
+                sock.close()
+                return
+
+        if client is None:
+            break
+
+        print("TCP accept from {0}:{1}".format(addr[0], addr[1]))
+        client.settimeout(0.2)
+
+        def recv(sock=client):
+            try:
+                return sock.recv(4096)
+            except socket.timeout:
+                return None
+
+        def send(data, sock=client):
+            sock.sendall(data)
+
+        try:
+            run_session(recv, send, args.echo)
+        finally:
+            try:
+                client.close()
+            except Exception:
+                pass
+            print("Session closed.")
+
+    sock.close()
+
+
 def run_tcp_client(args):
     print("TCP client connecting to {0}:{1} ...".format(args.host, args.port))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -356,14 +412,14 @@ def run_tcp_client(args):
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(description="SSH Interface v2 mock")
+    parser = argparse.ArgumentParser(description="Crestron Testing-Tools mock (SSH / TCP)")
     parser.add_argument(
         "mode",
-        choices=["ssh-server", "tcp-client"],
-        help="ssh-server: Crestron Client test. tcp-client: built-in TCP/IP Server test.",
+        choices=["ssh-server", "tcp-server", "tcp-client"],
+        help="ssh-server: Crestron SSH Client. tcp-server: Crestron TCP Client. tcp-client: Crestron TCP Server.",
     )
     parser.add_argument("--host", default="127.0.0.1", help="Remote host (client modes)")
-    parser.add_argument("--port", type=int, default=0, help="Port (defaults: ssh 2222, tcp 5000)")
+    parser.add_argument("--port", type=int, default=0, help="Port (defaults: ssh 2222, tcp-server 23, tcp-client 5000)")
     parser.add_argument("--bind", default="0.0.0.0", help="Listen address (server modes)")
     parser.add_argument("--user", default="crestron", help="SSH username")
     parser.add_argument("--password", default="crestron", help="SSH password")
@@ -390,12 +446,16 @@ def main():
     if args.port == 0:
         if args.mode.startswith("ssh"):
             args.port = 2222
+        elif args.mode == "tcp-server":
+            args.port = 23
         else:
             args.port = 5000
 
     try:
         if args.mode == "ssh-server":
             run_ssh_server(args)
+        elif args.mode == "tcp-server":
+            run_tcp_server(args)
         elif args.mode == "tcp-client":
             run_tcp_client(args)
     except KeyboardInterrupt:

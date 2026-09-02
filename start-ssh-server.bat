@@ -1,5 +1,5 @@
 @echo off
-title SSH Mock - SSH Server (Crestron Client test)
+title Testing Tools - SSH Server (Crestron SSH Client test)
 cd /d "%~dp0"
 
 where python >nul 2>&1

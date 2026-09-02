@@ -1,5 +1,5 @@
 @echo off
-title SSH Mock - TCP Client (built-in TCP/IP Server)
+title Testing Tools - TCP Client (Crestron TCP Server test)
 cd /d "%~dp0"
 
 where python >nul 2>&1

@@ -1,5 +1,5 @@
 @echo off
-title Install SSH Mock Dependencies
+title Install Testing-Tools Dependencies
 cd /d "%~dp0"
 
 where python >nul 2>&1
@@ -22,5 +22,5 @@ if errorlevel 1 (
 )
 
 echo.
-echo Done. Use start-ssh-server.bat or start-tcp-client.bat
+echo Done. Use start-ssh-server.bat, start-tcp-server.bat, or start-tcp-client.bat
 pause
