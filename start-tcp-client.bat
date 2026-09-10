@@ -21,7 +21,7 @@ if "%PORT%"=="" set PORT=5000
 
 echo.
 echo Connecting TCP to %HOST%:%PORT%
-echo Enable the SIMPL Windows TCP/IP Server symbol first.
+echo Enable the SIMPL Windows TCP/IP Server symbol first (Enable high, IP-NET 0.0.0.0).
 echo Type in this window to send to the processor. [RX] is data from it.
 echo Ctrl+C to stop.
 echo.

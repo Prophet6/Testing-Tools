@@ -4,6 +4,7 @@ PC bench tools for Crestron modules (Testing-Tools).
   ssh-server  This PC listens over SSH (Crestron SSH Client connects here)
   tcp-server  This PC listens over raw TCP (Crestron TCP Client connects here)
   tcp-client  This PC dials out (SIMPL Windows TCP/IP Server or TCP Server with Authentication)
+  udp         This PC listens and sends UDP (UDP/IP Communications or UDP Broadcast)
 
 Type a line and press Enter to send. Incoming data prints as [RX].
 Ctrl+C stops.
@@ -387,11 +388,111 @@ def run_tcp_server(args):
     sock.close()
 
 
+def is_conn_refused(exc):
+    if isinstance(exc, ConnectionRefusedError):
+        return True
+    return getattr(exc, "winerror", None) == 10061 or getattr(exc, "errno", None) in (111, 10061)
+
+
+def explain_tcp_connect_failure(host, port, exc):
+    print("ERROR: Could not connect to {0}:{1}".format(host, port))
+    print("  {0}".format(exc))
+    if is_conn_refused(exc):
+        print()
+        print("The host answered, but nothing is listening on that port.")
+        print("start-tcp-client.bat reached the processor; the program is not accepting TCP.")
+        print()
+        print("On the processor:")
+        print("  1. Program loaded and running")
+        print("  2. Built-in TCP/IP Server, or TCP Server with Authentication, is in the program")
+        print("  3. Enable is held high (AUTH module does not listen until Enable)")
+        print("  4. Port parameter matches {0} (AUTH default is 50001)".format(port))
+        print("  5. Built-in TCP/IP Server: IP-NET Address must be 0.0.0.0 (blank = no listen)")
+        print("  6. Built-in symbol allows one client; disconnect any other session first")
+        print()
+        print("Wrong direction? If the processor should connect to this PC,")
+        print("use start-tcp-server.bat instead.")
+        print("AUTH / TLS? Use start-tcp-auth-client.bat.")
+    elif isinstance(exc, socket.timeout) or isinstance(exc, TimeoutError):
+        print()
+        print("Timed out. Check IP, VLAN, and that this PC is on the same LAN as the processor.")
+    elif isinstance(exc, socket.gaierror):
+        print()
+        print("Could not resolve that host name.")
+    sys.exit(1)
+
+
+def run_udp(args):
+    dest = (args.host, args.port)
+    lan = local_ipv4()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    try:
+        sock.bind((args.bind, args.port))
+    except OSError as exc:
+        print("ERROR: Could not bind UDP {0}:{1}".format(args.bind, args.port))
+        print("  {0}".format(exc))
+        print("Another program may already be using that port.")
+        sys.exit(1)
+    sock.settimeout(0.2)
+
+    mode = "broadcast" if args.host == "255.255.255.255" else "unicast"
+    print("UDP listening on {0}:{1}".format(args.bind, args.port))
+    print("This PC LAN IP : {0}".format(lan))
+    print("Send target    : {0}:{1} ({2})".format(args.host, args.port, mode))
+    print("Windows Firewall blocks inbound UDP until you allow it.")
+    print("Right-click allow-firewall.bat and Run as administrator (once).")
+
+    def send(data):
+        sock.sendto(data, dest)
+
+    ACTIVE_SEND[0] = send
+    start_stdin(args.eol)
+    print("Type to send. Incoming datagrams print as [RX]. Ctrl+C to stop. eol={0} echo={1}".format(
+        args.eol, args.echo))
+
+    try:
+        while not STOP.is_set():
+            try:
+                chunk, addr = sock.recvfrom(4096)
+            except socket.timeout:
+                continue
+            except OSError as exc:
+                if not STOP.is_set():
+                    print("[recv failed]", exc)
+                break
+            if not chunk:
+                continue
+            try:
+                text = chunk.decode("utf-8", "replace")
+            except Exception:
+                text = repr(chunk)
+            tag = "RX local" if addr[0] == lan else "RX"
+            sys.stdout.write("[{0} {1}:{2}] {3}\n".format(tag, addr[0], addr[1], preview(text)))
+            sys.stdout.flush()
+            if args.echo:
+                try:
+                    sock.sendto(chunk, addr)
+                    sys.stdout.write("[TX echo -> {0}:{1}] {2}\n".format(
+                        addr[0], addr[1], preview(text)))
+                    sys.stdout.flush()
+                except OSError as exc:
+                    print("[echo failed]", exc)
+    finally:
+        ACTIVE_SEND[0] = None
+        sock.close()
+
+
 def run_tcp_client(args):
     print("TCP client connecting to {0}:{1} ...".format(args.host, args.port))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(10)
-    sock.connect((args.host, args.port))
+    try:
+        sock.connect((args.host, args.port))
+    except OSError as exc:
+        explain_tcp_connect_failure(args.host, args.port, exc)
+        return
     sock.settimeout(0.2)
     print("TCP connected.")
 
@@ -412,14 +513,14 @@ def run_tcp_client(args):
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(description="Crestron Testing-Tools mock (SSH / TCP)")
+    parser = argparse.ArgumentParser(description="Crestron Testing-Tools mock (SSH / TCP / UDP)")
     parser.add_argument(
         "mode",
-        choices=["ssh-server", "tcp-server", "tcp-client"],
-        help="ssh-server: Crestron SSH Client. tcp-server: Crestron TCP Client. tcp-client: Crestron TCP Server.",
+        choices=["ssh-server", "tcp-server", "tcp-client", "udp"],
+        help="ssh-server: Crestron SSH Client. tcp-server: Crestron TCP Client. tcp-client: Crestron TCP Server. udp: UDP/IP Communications or UDP Broadcast.",
     )
-    parser.add_argument("--host", default="127.0.0.1", help="Remote host (client modes)")
-    parser.add_argument("--port", type=int, default=0, help="Port (defaults: ssh 2222, tcp-server 23, tcp-client 5000)")
+    parser.add_argument("--host", default=None, help="Remote host (client modes / UDP send target)")
+    parser.add_argument("--port", type=int, default=0, help="Port (defaults: ssh 2222, tcp-server 23, tcp-client 5000, udp 50001)")
     parser.add_argument("--bind", default="0.0.0.0", help="Listen address (server modes)")
     parser.add_argument("--user", default="crestron", help="SSH username")
     parser.add_argument("--password", default="crestron", help="SSH password")
@@ -443,11 +544,16 @@ def main():
         load_or_make_host_key(True)
         return
 
+    if args.host is None:
+        args.host = "255.255.255.255" if args.mode == "udp" else "127.0.0.1"
+
     if args.port == 0:
         if args.mode.startswith("ssh"):
             args.port = 2222
         elif args.mode == "tcp-server":
             args.port = 23
+        elif args.mode == "udp":
+            args.port = 50001
         else:
             args.port = 5000
 
@@ -458,6 +564,8 @@ def main():
             run_tcp_server(args)
         elif args.mode == "tcp-client":
             run_tcp_client(args)
+        elif args.mode == "udp":
+            run_udp(args)
     except KeyboardInterrupt:
         print("\nStopping.")
         STOP.set()

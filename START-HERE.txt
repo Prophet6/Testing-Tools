@@ -26,13 +26,23 @@ SSH Client  — processor connects to this PC over SSH
   3. Hold Connect
 
 Inbound TCP on the processor (built-in TCP/IP Server)
-  1. Enable TCP/IP Server in SIMPL, note its port (e.g. 5000)
-  2. Double-click start-tcp-client.bat
-  3. Enter processor IP and that port
+  1. Add TCP/IP Server in Configure view. IP-NET Address = 0.0.0.0 (blank will not listen)
+  2. Hold Enable high, note the Port parameter (e.g. 5000)
+  3. Double-click start-tcp-client.bat
+  4. Enter processor IP and that port
+     Connection refused = processor is up but not listening — Enable / port / IP-NET, not this script.
 
 TCP Server with Authentication
   1. Double-click start-tcp-auth-client.bat
   2. Enter processor IP, port (default 50001), optional TLS / AUTH
+
+UDP / UDP Broadcast
+  1. Hold Enable high on the processor UDP symbol, note the port (e.g. 50001)
+  2. Right-click allow-firewall.bat → Run as administrator (once; includes UDP 50001)
+  3. Double-click start-udp.bat
+  4. Port = 50001
+     Send to = 255.255.255.255 (broadcast) or the processor IP (unicast)
+  5. Type here to send; [RX] is datagrams from the LAN
 
 Other
   rotate-host-key.bat     new SSH fingerprint (Accept_New_Key test)
