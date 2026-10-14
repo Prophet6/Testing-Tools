@@ -11,7 +11,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Installing paramiko...
+echo Installing paramiko, pyftpdlib, and cryptography...
 python -m pip install --user -r requirements.txt
 
 if errorlevel 1 (
@@ -22,5 +22,5 @@ if errorlevel 1 (
 )
 
 echo.
-echo Done. Use start-ssh-server.bat, start-tcp-server.bat, or start-tcp-client.bat
+echo Done. Use start-ssh-server.bat, start-tcp-server.bat, start-tcp-client.bat, or start-remote-file-sync.bat
 pause

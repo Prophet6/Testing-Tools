@@ -36,6 +36,19 @@ TCP Server with Authentication
   1. Double-click start-tcp-auth-client.bat
   2. Enter processor IP, port (default 50001), optional TLS / AUTH
 
+Remote File Sync  — processor connects to this PC
+  1. Double-click install-dependencies.bat once (HTTP, HTTPS, and FTP)
+  2. Right-click allow-firewall.bat → Run as administrator (once; includes 8080, 8443, 2121)
+  3. Double-click start-remote-file-sync.bat
+  4. Remote_URL examples, using the LAN IP the window prints:
+       http://<LAN IP>:8080/present.json
+       https://<LAN IP>:8443/present.json   Allow_Insecure_TLS = high
+       ftp://<LAN IP>:2121/present.json
+     Local_Path = /user/present.json
+     User and password empty, or crestron / crestron
+  5. missing.json is absent. large.bin is 300 KB and must be refused.
+     Type reset to restore the folder. Type list to see sizes.
+
 UDP / UDP Broadcast
   1. Hold Enable high on the processor UDP symbol, note the port (e.g. 50001)
   2. Right-click allow-firewall.bat → Run as administrator (once; includes UDP 50001)

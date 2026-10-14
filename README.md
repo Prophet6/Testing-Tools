@@ -15,6 +15,7 @@ This project is not affiliated with Crestron Electronics.
 | `start-tcp-client.bat` | This PC **dials out** (raw TCP) | Built-in SIMPL **TCP/IP Server** |
 | `start-tcp-auth-client.bat` | This PC **dials out** (plain or TLS + AUTH) | [TCP Server with Authentication](https://github.com/Prophet6/Crestron-Modules/tree/main/tcp-server-with-authentication) |
 | `start-udp.bat` | This PC **listens and sends** UDP (port **50001**) | Built-in **UDP/IP Communications** or **UDP Broadcast and Receive** |
+| `start-remote-file-sync.bat` | This PC **listens** (HTTP **8080**, HTTPS **8443**, FTP **2121**) | [Remote File Sync v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/remote-file-sync) |
 
 `mock.py` is the SSH / raw-TCP / UDP program. Type a line and press Enter to send; incoming bytes print as `[RX]`.
 
@@ -42,7 +43,7 @@ This project is not affiliated with Crestron Electronics.
 1. Windows 10 or 11 PC on the **same LAN** as the processor
 2. **Python 3.9+** from [python.org](https://www.python.org/downloads/) — check **Add python.exe to PATH**
 3. Double-click `install-dependencies.bat` (once; needed for SSH)
-4. Firewall: **right-click `allow-firewall.bat` → Run as administrator** (once). That opens inbound TCP **23**, **2222**, **5000**, and UDP **50001**. Without this, the processor never reaches the mock — Windows Firewall is on by default and Python does not get an allow rule.
+4. Firewall: **right-click `allow-firewall.bat` → Run as administrator** (once). That opens inbound TCP **23**, **2222**, **5000**, **8080**, **8443**, **2121**, **2122-2130**, and UDP **50001**. Without this, the processor never reaches the mock — Windows Firewall is on by default and Python does not get an allow rule.
 
 New to this folder? Read `START-HERE.txt`.
 
@@ -102,6 +103,34 @@ UDP Broadcast and Receive (`MAC,UID,DATA`) example:
 AA:BB:CC:DD:EE:FF,bench,hello
 ```
 
+## Remote File Sync
+
+This PC **listens**. The processor **connects out**. One folder is served over HTTP, HTTPS, and FTP, so Check, Retrieve, and Overwrite can be tried on each protocol against the same file.
+
+1. Double-click **`install-dependencies.bat`** once (adds `pyftpdlib` and `cryptography`).
+2. Right-click **`allow-firewall.bat` → Run as administrator** if you have not since these ports were added.
+3. Double-click **`start-remote-file-sync.bat`**.
+4. On Remote File Sync v1.0, set `Local_Path` to `/user/present.json`. Leave the user and password empty, or set both to `crestron`.
+
+| Protocol | Remote_URL | Extra |
+|----------|------------|--------|
+| HTTP | `http://<LAN IP>:8080/present.json` | |
+| HTTPS | `https://<LAN IP>:8443/present.json` | `Allow_Insecure_TLS` high. The certificate is self-signed, so verification on must fail. |
+| FTP | `ftp://<LAN IP>:2121/present.json` | |
+
+`<LAN IP>` is the address the window prints. Do not use `127.0.0.1`.
+
+| Module pulse | File in the URL | What you should see |
+|--------------|-----------------|---------------------|
+| Check | `present.json` | `Remote_Exists_FB` high. The processor file is unchanged. |
+| Check | `missing.json` | `Remote_Exists_FB` low. |
+| Retrieve | `present.json` | Processor file replaced. `Retrieved` pulses. The console shows GET or RETR. |
+| Retrieve | `missing.json` | Processor file kept. Console shows 404 or 550. |
+| Retrieve | `large.bin` | Refused. Feedback says the file is larger than 256 KB. |
+| Overwrite | `present.json` | Console shows PUT or STOR. `reset` on this PC restores the original file. |
+
+`present.json` is a small File Reader JSON file. `reset` on the console restores it and deletes `missing.json`. `list` prints names and sizes. An Overwrite of `missing.json` creates that file until `reset`.
+
 ## Command line
 
 ```text
@@ -111,6 +140,7 @@ python mock.py tcp-client --host 192.168.1.10 --port 5000
 python tcp-auth-client/tcp_auth_client.py --host 192.168.1.10 --port 50001 --tls --user user --password pass
 python mock.py udp --host 255.255.255.255 --port 50001
 python mock.py udp --host 192.168.1.10 --port 50001
+python remote-file-sync\server.py
 python mock.py ssh-server --rotate-key
 ```
 
