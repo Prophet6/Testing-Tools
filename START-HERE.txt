@@ -57,6 +57,14 @@ UDP / UDP Broadcast
      Send to = 255.255.255.255 (broadcast) or the processor IP (unicast)
   5. Type here to send; [RX] is datagrams from the LAN
 
+UDP Census (one RMC4 is enough)
+  1. Use UDP Census v1.0. Leave the v2 beacon off. Both want port 50001.
+  2. Right-click allow-firewall.bat → Run as administrator (once; includes UDP 50001)
+  3. Double-click start-udp-census.bat. Do not also run start-udp.bat.
+  4. Collector: Census_Enable and Census_Discover high. This PC appears as pc-1.
+     peers 2 adds a second fake processor on the next poll.
+  5. Answer-only: Census_Enable high, Census_Discover low. Type poll here.
+
 Other
   rotate-host-key.bat     new SSH fingerprint (Accept_New_Key test)
 

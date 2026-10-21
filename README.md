@@ -15,6 +15,7 @@ This project is not affiliated with Crestron Electronics.
 | `start-tcp-client.bat` | This PC **dials out** (raw TCP) | Built-in SIMPL **TCP/IP Server** |
 | `start-tcp-auth-client.bat` | This PC **dials out** (plain or TLS + AUTH) | [TCP Server with Authentication](https://github.com/Prophet6/Crestron-Modules/tree/main/tcp-server-with-authentication) |
 | `start-udp.bat` | This PC **listens and sends** UDP (port **50001**) | Built-in **UDP/IP Communications** or **UDP Broadcast and Receive** |
+| `start-udp-census.bat` | This PC **answers and sends** census polls (port **50001**) | [UDP Census v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/udp-broadcast-receive) |
 | `start-remote-file-sync.bat` | This PC **listens** (HTTP **8080**, HTTPS **8443**, FTP **2121**) | [Remote File Sync v1.0](https://github.com/Prophet6/Crestron-Modules/tree/main/remote-file-sync) |
 
 `mock.py` is the SSH / raw-TCP / UDP program. Type a line and press Enter to send; incoming bytes print as `[RX]`.
@@ -35,6 +36,8 @@ This project is not affiliated with Crestron Electronics.
 │  start-tcp-auth-… ───┼────────────────────────►┤  TCP Server + AUTH   │
 │                      │  UDP 50001              │                      │
 │  start-udp ──────────┼◄──────────────────────►┤  UDP / UDP Broadcast │
+│                      │  UDP 50001              │                      │
+│  start-udp-census ───┼◄──────────────────────►┤  UDP Census v1.0     │
 └──────────────────────┘                         └──────────────────────┘
 ```
 
@@ -102,6 +105,20 @@ UDP Broadcast and Receive (`MAC,UID,DATA`) example:
 ```text
 AA:BB:CC:DD:EE:FF,bench,hello
 ```
+
+Do not run this at the same time as `start-udp-census.bat`. Both listen on UDP **50001**.
+
+## UDP Census
+
+One 4-Series processor plus this PC. The PC stands in for the other processors.
+
+1. On the RMC4, use **UDP Census v1.0** only. Leave **UDP Broadcast and Receive v2.0** off. Both want port **50001**.
+2. Right-click **`allow-firewall.bat` → Run as administrator** if you have not (the UDP **50001** rule is already in that script).
+3. Double-click **`start-udp-census.bat`**. Leave `start-udp.bat` closed.
+4. Collector: `Census_Enable` and `Census_Discover` high. After a poll, the table includes this PC as `pc-1`, MAC `AA:BB:CC:DD:EE:01`. Type `peers 2` before the next poll to add `pc-2`.
+5. Answer-only: `Census_Enable` high, `Census_Discover` low, `Census_Enable_FB` high. Type `poll` here. The window lists the processor's `!HERE`.
+
+Commands: `poll`, `peers N` (1–8), `window S` (0.5–30 seconds), `help`, `quit`.
 
 ## Remote File Sync
 
